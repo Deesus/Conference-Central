@@ -1,4 +1,4 @@
-## Dee Reddy
+## Conference Central
 App Engine application for the Udacity training course.
 
 ## Products
@@ -80,7 +80,7 @@ class Profile(ndb.Model):
 
 
 ## Task 3: Work on indexes and queries
-#### Query Related Problem
+#### Query Related Problem:
 Datastore has two query restrictions:
 1. An inequality filter can be applied to at most one property.
 2. A property with an inequality filter must be sorted first.
