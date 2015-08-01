@@ -40,11 +40,11 @@ A deployed version of the *Conference Central* app can be accessed at [https://s
 
 You can test the endpoints (of this deployed app) from Google's endpoints explorer: [https://scalable-apps-990.appspot.com/_ah/api/explorer](https://scalable-apps-990.appspot.com/_ah/api/explorer).
 
-Addendum: You can likewise the test endpoints of your own app by replacing `scalable-apps-990` with your app's registered ID or with the localhost. E.g. to use Google's api endpoints explorer on a local version of your app, you can visit [http://localhost:8080/_ah/api/explorer](http://localhost:8080/_ah/api/explorer) on your browser.
+Addendum: You can likewise test the endpoints of your own app by replacing `scalable-apps-990` from the above url with your app's registered ID or localhost. E.g. to use Google's api endpoints explorer on a local version of your app, you can visit [http://localhost:8080/_ah/api/explorer](http://localhost:8080/_ah/api/explorer) on your browser.
 
 
 ## Task 1: Add Sessions to a Conference
-For this task, we define the following endpoints regarding Conference sessions:
+For this task, we define the following endpoints regarding conference sessions:
 
 ```
 getConferenceSessions(websafeConferenceKey)
@@ -53,7 +53,7 @@ getSessionsBySpeaker(speaker)
 createSession(SessionForm, websafeConferenceKey)
 ```
 
-Overall, I kept in-line with the structure and style of the preexisting code by Udacity. Because the Session endpoints are functionally similar to the Conference endpoints, the code for sessions is noticeably similar to the code for conferences. The basis for my design choices for these Sessions endpoints was to emulate the style and functionality of the Conference Objects. E.g. `_createSessionObject` method is based on the `_createConferenceObject` method. Likewise, the `Session` class (kind) emulates the `Conference` kind, and with the exception of "speaker" and "highlights" properties (which is specific to sessions) it contains similar properties and retains similar data types:
+Overall, I kept in-line with the structure and style of Udacity's preexisting code. The basis of my design choices for these session endpoints was to emulate the style and functionality of the Conference Objects; because the session methods are functionally similar to the conference methods, the code for sessions is similar to the code for conferences. E.g. the `_createSessionObject` method is based on the `_createConferenceObject` method. Likewise, the `Session` class (kind) emulates the `Conference` kind, and with the exception of "speaker" and "highlights" properties (which is specific to sessions), the `Session` kind contains similar properties and retains similar data types:
 
 ```
 name            = ndb.StringProperty(required=True)
@@ -65,13 +65,13 @@ duration        = ndb.TimeProperty()
 highlights      = ndb.StringProperty(repeated=True)
 ```
 
-The choice for data types was fairly clear-cut: the standard "StringProperty" was used to for various names (names of the session, names of speakers, etc.) "date" is represented by the "DateProperty"; "time" and "duration" are represented with the "Time" data type; since there can be multiple highlights in a session (i.e. an array of values), we specify `repeated=True`.
+The choice for data types was fairly clear-cut: the standard "StringProperty" was used to for various names (names of the session, names of speakers, etc.); "date" is represented by "DateProperty"; "time" and "duration" are represented with the "Time" data type; and since there can be multiple highlights in a session (i.e. an array of values), we specify `repeated=True`.
 
 The 'GET' methods, `getConferenceSessions` and `getConferenceSessionsByType` reuse the `_query_sessions` helper method. Since the Session object are children of Conferences (i.e. each conference contains one or more session), sessions can be easily queried by accessing the conference key and filtering when necessary.
 
 
 ## Task 2: Add Sessions to User Wishlist
-The endpoints `addSessionToWishlist(SessionKey)` and `getSessionsInWishlist()` enable the user to save session of interest onto their profile. The user can add any session (not just one's he has registered for) into the wishlist, so long as he is logged in. Each time the user adds a session to his wishlist, the session key is added to the `wishListKeys` field. Because the wishlist is dependent on each individual user (and not, for example, the conference) it would make the most sense to implement the wishlist as a field within the Profile entity:
+The endpoints `addSessionToWishlist(SessionKey)` and `getSessionsInWishlist()` enable the user to save sessions of interest in their profile (i.e. in the `Profile` entity). The user can add any session (not just the ones he has registered for) into the wishlist, so long as he is logged in. Each time the user adds a session to his wishlist, the session key is appended to the `wishListKeys` field. Because the wishlist is dependent on each individual user (and not, for example, the conference) it would make the most sense to implement the wishlist as a field within the Profile entity:
 ```
 class Profile(ndb.Model):
 	wishListKeys = ndb.StringProperty(repeated=True)
@@ -102,7 +102,7 @@ The two queries I have implemented in the *Conference Central* app are:
 getSessionsInWishlistByType(typeOfSesion)
 getSessionsInWishlistBySpeaker(Speaker)
 ```
-As the names imply, the `getSessionsInWishlistByType` method searches the user's wishlist for sessions and then filters the result by the type of session and the `getSessionsInWishlistBySpeaker` method returns the user's wishlist sessions by the speaker's name. The purpose/benefit of the two methods is to enable the user to only see specific sessions in his wishlist, abating the need to peruse through a large list of results.
+As the names imply, the `getSessionsInWishlistByType` method searches the user's wishlist for sessions and then filters the result by the type of session and the `getSessionsInWishlistBySpeaker` method returns the user's wishlist sessions by the speaker's name. The purpose/benefit of the two methods is to enable the user to see only specific sessions in his wishlist, abating the need to peruse through a large list of results.
 
 The two additional queries implement the solution to the aforementioned 'query related problem.' For example,  the `getSessionsInWishlistByType` method 
 queries all session objects (filtered by request type) and also fetches all items in the user's wishlist. We then loop through the array and search for intersections between the two arrays:
@@ -113,4 +113,4 @@ return SessionForms(items=[self._copySessionToForm(x) for x in wish_list_session
 
 ## Task 4: Add a Task
 
-The private `_createSessionObject` method is modified to check for a featured speaker. When a session is added by the user, and this session includes the name of a speaker, the method checks [iterates through] the session's conference for additional entries of the given speaker. If multiple entries of the speaker are found, this speaker is set as the "featured speaker" (along with the names of the sessions the speaker is partaking in) in the the app's Memcache. Conversely, the `getFeaturedSpeaker(ConferenceKey)` endpoint returns the featured speaker (if one exists) for the given conference.
+The private `_createSessionObject` method is modified to check for a featured speaker. When a session is added by the user, and this session includes the name of a speaker, the method checks [iterates through] the session's conference for additional entries of the given speaker. If multiple entries of the speaker are found, this speaker is set as the "featured speaker" (along with the names of the sessions the speaker is partaking in) in the app's Memcache. Conversely, the `getFeaturedSpeaker(ConferenceKey)` endpoint returns the featured speaker (if one exists) for the given conference.
