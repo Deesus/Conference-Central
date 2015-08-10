@@ -671,10 +671,8 @@ class ConferenceApi(remote.Service):
     def _createSessionObject(self, request):
         """Helper function to create session object and check featured speaker.
 
-        Creates session object, returning SessionForm object. Also checks the
-        speakers in given conference and if it finds more than one entry of
-        the speaker, it sets a memcache entry to the speaker and the
-        session names the speaker is in.
+        Creates session object, returning SessionForm object. Also initiates a
+        taskqueue to check for featured speaker.
         """
 
         # ensure user is logged in:
@@ -727,31 +725,6 @@ class ConferenceApi(remote.Service):
             data['duration'] = datetime.strptime(
                 data['duration'][:10], "%H:%M").time()
 
-        # check for featured speaker in conference:
-        if data['speaker'] != "none":
-            memcache_output = ''
-            sessions_in_conf = self._query_sessions(request)
-            # search sessions for multiple instances of the same speaker:
-            for x in sessions_in_conf:
-                # if we find a match (the speaker exists in another session):
-                if x.speaker == data['speaker']:
-                    # add session to output:
-                    memcache_output += data['name'] + " "
-
-            # if we have memcache_output, we have a featured speaker:
-            if memcache_output:
-                # append the newly added session to output string:
-                memcache_output += data['name']
-
-                # create unique memcache key for conference
-                # (using conference key):
-                memcache_key = MEMCACHE_FEATURED_SPEAKER_KEY + str(wsck)
-
-                # set memcache on datastore using key, speaker, and output:
-                memcache.set(memcache_key, "Featured Speaker: {}. Sessions: {}"
-                                           "".format(data['speaker'],
-                                                     memcache_output))
-
         # make Conference key:
         c_key = conf.key
         # allocate new Session ID with Conference key as parent:
@@ -759,11 +732,16 @@ class ConferenceApi(remote.Service):
         # make Session key from ID:
         s_key = ndb.Key(Session, s_id, parent=c_key)
         data['key'] = s_key
-
-        # create Session & return (modified) SessionForm:
+        # create Session:
         Session(**data).put()
 
-        # we want 'models.SessionForm':
+        # check for featured speaker in conference:
+        taskqueue.add(params={'speaker': data['speaker'],
+                              'wsck': wsck
+                              },
+                      url='/tasks/set_featured_speaker')
+
+        # return (modified) SessionForm ('models.SessionForm'):
         session_ = s_key.get()
         return self._copySessionToForm(session_)
 
