@@ -38,7 +38,7 @@ handlers:       # static then dynamic
   script: main.app
   login: admin
 
-- url: /tasks/send_confimation_email
+- url: /tasks/send_confirmation_email
   script: main.app
   login: admin
 
