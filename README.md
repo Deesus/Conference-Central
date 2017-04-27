@@ -1,5 +1,5 @@
 ## Conference Central
-App Engine application for the Udacity training course.
+###### A conference scheduling application built on Google's _App Engine_
 
 ## Products
 - [App Engine][1]
